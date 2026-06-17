@@ -7,7 +7,9 @@ from sklearn.preprocessing import LabelEncoder
 
 class PokemonImages(Dataset):
     
-    def __init__(self, data_path):
+    def __init__(self, data_path, transform=None):
+        self.transform = transform
+        
         metadata_path = Path(data_path) / "pokedex_Ver9.csv"
         special_parsers = {'Height': lambda x: float(x[:-1]), 'Weight': lambda x: float(x[:-2])}
         df = pd.read_csv(metadata_path, converters=special_parsers).set_index("No")
@@ -29,7 +31,10 @@ class PokemonImages(Dataset):
             self.attributes.append(torch.from_numpy(metadata[self.attribute_names].values.astype('float32')))
             
     def __getitem__(self, idx):
-        return self.images[idx], self.labels[idx], self.names[idx], self.attributes[idx]
+        imagen = self.images[idx]
+        if self.transform:
+            imagen = self.transform(imagen)
+        return imagen, self.labels[idx], self.names[idx], self.attributes[idx]
     
     def __len__(self):
         return len(self.labels)
